@@ -1,0 +1,35 @@
+# Build context = repository root (see deployment/Dockerfile's header).
+# Everything below is excluded from what gets sent to the Docker daemon and
+# therefore can never end up `COPY`'d into an image layer, even by an
+# accidental broad `COPY . .` in a future Dockerfile edit.
+
+# Secrets -- never allowed in the image (see deployment/Dockerfile's
+# secrets-policy comment). This is the primary safety net.
+.env
+.env.*
+!.env.example
+
+# Local virtualenv / caches -- irrelevant to the image (deps are installed
+# fresh in the builder stage) and would bloat the build context massively.
+.venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Local durable-execution / observability artifacts -- runtime state, not
+# source; the image creates its own empty /app/traces at build time.
+traces/
+evals/reports/
+
+# VCS / editor / OS noise.
+.git/
+.gitignore
+.vscode/
+.idea/
+*.log
+
+# Docs and tests are not needed inside the runtime image.
+docs/
+tests/
+evals/dataset/__pycache__/

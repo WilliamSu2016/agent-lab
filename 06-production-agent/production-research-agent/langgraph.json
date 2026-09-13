@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "production_research_agent": "./src/graph/entrypoint.py:graph"
+  },
+  "env": ".env",
+  "python_version": "3.10"
+}

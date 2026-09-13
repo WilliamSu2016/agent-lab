@@ -1,0 +1,446 @@
+[
+  {
+    "id": "case-01-simple-no-tool",
+    "category": "simple_question_no_tool",
+    "description": "A simple, stable-knowledge question that never requires web_search.",
+    "input": "What is the capital of France?",
+    "max_turns": 5,
+    "expected_behavior": "completed_no_tool",
+    "expected_tool_usage": {
+      "min_calls": 0,
+      "max_calls": 0,
+      "tools": []
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": "The capital of France is Paris.",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-02-single-search",
+    "category": "requires_one_search",
+    "description": "A factual, current-information question that requires exactly one web_search call.",
+    "input": "What is the latest stable version of Python?",
+    "max_turns": 5,
+    "expected_behavior": "completed_with_search",
+    "expected_tool_usage": {
+      "min_calls": 1,
+      "max_calls": 1,
+      "tools": ["web_search"]
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "latest stable Python version 2026",
+              "result": {
+                "query": "latest stable Python version 2026",
+                "results": [
+                  {
+                    "title": "Python Releases",
+                    "url": "https://www.python.org/downloads/",
+                    "snippet": "Python 3.13 is the latest stable release."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": "The latest stable version of Python is 3.13 (see https://www.python.org/downloads/).",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-03-multi-search",
+    "category": "requires_multiple_searches",
+    "description": "A comparison question where the agent must search once per compared item before answering.",
+    "input": "Compare current backend adoption of Rust vs Go in production systems.",
+    "max_turns": 5,
+    "expected_behavior": "completed_with_multi_search",
+    "expected_tool_usage": {
+      "min_calls": 2,
+      "max_calls": 2,
+      "tools": ["web_search"]
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "Rust backend adoption production 2026",
+              "result": {
+                "query": "Rust backend adoption production 2026",
+                "results": [
+                  {
+                    "title": "Rust in production",
+                    "url": "https://example.com/rust-adoption",
+                    "snippet": "Rust adoption is growing in performance-critical backends."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_2",
+              "query": "Go backend adoption production 2026",
+              "result": {
+                "query": "Go backend adoption production 2026",
+                "results": [
+                  {
+                    "title": "Go in production",
+                    "url": "https://example.com/go-adoption",
+                    "snippet": "Go remains widely adopted for cloud-native backend services."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": "Both are widely used: Rust is growing in performance-critical services (example.com/rust-adoption), while Go remains a common default for cloud-native backends (example.com/go-adoption).",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-04-tool-empty-results",
+    "category": "tool_returns_no_results",
+    "description": "web_search executes successfully but returns an empty result list; the agent must acknowledge the limitation.",
+    "input": "What did the fictional city of Nowhereville announce at its 2099 tech summit?",
+    "max_turns": 5,
+    "expected_behavior": "completed_empty_results",
+    "expected_tool_usage": {
+      "min_calls": 1,
+      "max_calls": 1,
+      "tools": ["web_search"],
+      "allow_empty_results": true
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "Nowhereville 2099 tech summit announcements",
+              "result": {
+                "query": "Nowhereville 2099 tech summit announcements",
+                "results": []
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": "I could not find any sources about this event; it may not exist or is not indexed. I cannot answer this reliably.",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-05-tool-error",
+    "category": "tool_returns_error",
+    "description": "web_search raises an exception (simulated network failure); the agent must recover and still produce a bounded answer.",
+    "input": "What is today's exchange rate for the fictional XYZ currency?",
+    "max_turns": 5,
+    "expected_behavior": "completed_tool_error_recovered",
+    "expected_tool_usage": {
+      "min_calls": 1,
+      "max_calls": 1,
+      "tools": ["web_search"],
+      "expect_tool_error": true,
+      "expected_error_code": "TOOL_EXECUTION_FAILED"
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "XYZ currency exchange rate today",
+              "error": "Simulated network timeout while contacting the search provider."
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": "The search tool failed, so I cannot verify a current exchange rate for XYZ. Please retry later or provide a currency converter source.",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-06-vague-question",
+    "category": "vague_user_question",
+    "description": "An ambiguous question with no resolvable subject; the agent should ask for clarification instead of guessing or searching blindly.",
+    "input": "Tell me about it.",
+    "max_turns": 3,
+    "expected_behavior": "completed_clarifying_no_tool",
+    "expected_tool_usage": {
+      "min_calls": 0,
+      "max_calls": 0,
+      "tools": []
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": "Your question is too vague for me to research. Could you clarify what topic, person, or event you mean by 'it'?",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-07-multi-info-request",
+    "category": "multiple_pieces_of_information",
+    "description": "The user asks for several distinct facts in one question; the agent should gather them via a focused search and report all of them.",
+    "input": "What are the capital, population, and official language of Japan?",
+    "max_turns": 5,
+    "expected_behavior": "completed_multi_info_search",
+    "expected_tool_usage": {
+      "min_calls": 1,
+      "max_calls": 2,
+      "tools": ["web_search"]
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "Japan capital population official language",
+              "result": {
+                "query": "Japan capital population official language",
+                "results": [
+                  {
+                    "title": "Japan - Country Profile",
+                    "url": "https://example.com/japan",
+                    "snippet": "Capital: Tokyo. Population: ~123 million. Official language: Japanese."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": "Japan's capital is Tokyo, its population is approximately 123 million, and its official language is Japanese (example.com/japan).",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-08-max-turns-reached",
+    "category": "max_turns_reached",
+    "description": "The agent keeps requesting searches and never reaches a final answer within the configured turn budget.",
+    "input": "Research an open-ended topic that requires endless follow-up verification.",
+    "max_turns": 2,
+    "expected_behavior": "limit_reached",
+    "expected_tool_usage": {
+      "min_calls": 2,
+      "max_calls": 2,
+      "tools": ["web_search"]
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "open-ended topic initial research",
+              "result": {
+                "query": "open-ended topic initial research",
+                "results": [
+                  {
+                    "title": "Partial source",
+                    "url": "https://example.com/partial-1",
+                    "snippet": "Some partial, inconclusive information."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_2",
+              "query": "open-ended topic follow-up verification",
+              "result": {
+                "query": "open-ended topic follow-up verification",
+                "results": [
+                  {
+                    "title": "Partial source 2",
+                    "url": "https://example.com/partial-2",
+                    "snippet": "Still inconclusive; more verification requested."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-09-conflicting-results",
+    "category": "conflicting_search_results",
+    "description": "Search results across two queries disagree; the agent must present both sides rather than pick one arbitrarily.",
+    "input": "Is coffee good or bad for health?",
+    "max_turns": 5,
+    "expected_behavior": "completed_conflicting_evidence",
+    "expected_tool_usage": {
+      "min_calls": 2,
+      "max_calls": 2,
+      "tools": ["web_search"]
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "coffee health effects research",
+              "result": {
+                "query": "coffee health effects research",
+                "results": [
+                  {
+                    "title": "Coffee linked to lower disease risk",
+                    "url": "https://example.com/coffee-good",
+                    "snippet": "A large cohort study found moderate coffee intake reduces certain disease risks."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_2",
+              "query": "coffee health effects meta-analysis conflicting",
+              "result": {
+                "query": "coffee health effects meta-analysis conflicting",
+                "results": [
+                  {
+                    "title": "Coffee linked to increased anxiety and sleep issues",
+                    "url": "https://example.com/coffee-bad",
+                    "snippet": "Another review found high coffee intake worsens anxiety and sleep quality."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": "Evidence is mixed: some studies (example.com/coffee-good) associate moderate coffee intake with lower disease risk, while others (example.com/coffee-bad) link high intake to worse anxiety and sleep. Moderation appears key, and individual response varies.",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "case-10-complex-question-completed",
+    "category": "complex_question_normal_completion",
+    "description": "A multi-dimensional comparison question that requires more than one search but completes normally with a grounded final answer.",
+    "input": "Which is more suitable for building AI agents: Python or TypeScript, considering ecosystem, tooling, and deployment?",
+    "max_turns": 5,
+    "expected_behavior": "completed_complex_multi_search",
+    "expected_tool_usage": {
+      "min_calls": 2,
+      "max_calls": 3,
+      "tools": ["web_search"]
+    },
+    "turns": [
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "query": "Python AI agent ecosystem libraries 2026",
+              "result": {
+                "query": "Python AI agent ecosystem libraries 2026",
+                "results": [
+                  {
+                    "title": "Python AI ecosystem",
+                    "url": "https://example.com/python-ai",
+                    "snippet": "Python has mature AI/ML libraries and agent frameworks."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_2",
+              "query": "TypeScript AI agent tooling deployment 2026",
+              "result": {
+                "query": "TypeScript AI agent tooling deployment 2026",
+                "results": [
+                  {
+                    "title": "TypeScript AI tooling",
+                    "url": "https://example.com/typescript-ai",
+                    "snippet": "TypeScript offers strong tooling and deployment ergonomics for web-facing agents."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "assistant": {
+          "content": "Python is generally more suitable due to its mature AI/ML ecosystem (example.com/python-ai), while TypeScript offers stronger tooling for web-deployed agent front-ends (example.com/typescript-ai). Choice depends on whether the priority is ML/data work or web integration.",
+          "tool_calls": []
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,70 @@
+# Development vs Production, side by side.
+#
+#   Development (local LangGraph server):
+#       docker compose --profile dev up langgraph-dev
+#     -- runs `langgraph dev` against langgraph.json, repo mounted
+#     read-write for live reload. No auth/rate limiting -- a local,
+#     single-developer tool, never exposed beyond localhost.
+#
+#   Production (this project's own FastAPI app):
+#       docker compose --profile prod up -d agent-api
+#     -- builds deployment/Dockerfile, uses the production SQLite
+#     checkpointer on a named, persistent volume, reads every
+#     secret/setting from `.env` at container start (never baked into
+#     the image).
+#
+# Neither profile hard-codes a secret value anywhere in this file: real
+# values live only in a local `.env` (git-ignored) referenced via `env_file:`.
+
+services:
+  langgraph-dev:
+    profiles: ["dev"]
+    image: python:3.10.8-slim
+    working_dir: /repo
+    volumes:
+      - ..:/repo
+    env_file:
+      - ../.env
+    environment:
+      ENVIRONMENT: development
+    ports:
+      - "8123:8123"
+    command: >
+      bash -c "pip install --no-cache-dir -r requirements.txt 'langgraph-cli[inmem]' &&
+               langgraph dev --config langgraph.json --host 0.0.0.0 --port 8123 --no-browser"
+
+  agent-api:
+    profiles: ["prod"]
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    image: production-research-agent:latest
+    env_file:
+      - ../.env
+    environment:
+      ENVIRONMENT: production
+      CHECKPOINT_DB_PATH: /app/traces/production_checkpoints.sqlite3
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+      API_GRACEFUL_SHUTDOWN_SECONDS: "30"
+      RATE_LIMIT_MAX_REQUESTS: "60"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persistent storage for the production checkpointer. Named volume,
+      # not a bind mount -- survives `docker compose down` (only `down -v`
+      # removes it), and a container replacement/redeploy resumes exactly
+      # where the last one left off.
+      - checkpoints:/app/traces
+    restart: unless-stopped
+    stop_grace_period: 45s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u,sys; sys.exit(0 if u.urlopen('http://127.0.0.1:8000/health', timeout=2).status==200 else 1)"]
+      interval: 15s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  checkpoints:
