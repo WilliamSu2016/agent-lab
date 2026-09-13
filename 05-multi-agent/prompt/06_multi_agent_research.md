@@ -28,6 +28,7 @@ LangGraph
 
 Architecture：
 
+```text
 User
 ↓
 Supervisor
@@ -45,6 +46,7 @@ Reviewer
 Conditional
 ├── FAIL → Research
 └── PASS → Final Answer
+```
 
 要求：
 

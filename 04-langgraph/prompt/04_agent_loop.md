@@ -19,6 +19,7 @@ return final_answer
 
 Graph：
 
+```text
 START
 ↓
 agent
@@ -30,6 +31,7 @@ should_continue
 │               agent
 │
 └── "end" → END
+```
 
 要求：
 

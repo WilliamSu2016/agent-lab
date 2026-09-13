@@ -6,12 +6,14 @@ Research Agent
 
 流程固定为：
 
+```text
 START
 → planner
 → researcher
 → analyst
 → writer
 → END
+```
 
 要求：
 

@@ -18,6 +18,7 @@
 ```
 
 # 一个 Production Agent 至少应该具备：
+```text
                     Production Agent
                            │
  ┌──────────┬──────────────┼──────────────┬──────────────┐
@@ -28,6 +29,7 @@ Retry      Auth          Tracing        Evals          Concurrency
 Timeout    Guardrail     Metrics        Regression     Queue
 Checkpoint Permissions  Logging        Dataset        Rate limit
 Recovery   Approval      Alerts         Quality       Autoscale
+```
 
 # 再加上：
 - Cost
@@ -78,6 +80,7 @@ Recovery   Approval      Alerts         Quality       Autoscale
 
 
 # 学习路线
+```text
 ⑬ Production Agent
 │
 ├── 13.0 Production Architecture
@@ -101,6 +104,7 @@ Recovery   Approval      Alerts         Quality       Autoscale
 ├── 13.9 Failure Injection
 │
 └── 13.10 Production Readiness Review
+```
 
 # Production Agent Mental Model
                        USER
@@ -156,6 +160,7 @@ Recovery   Approval      Alerts         Quality       Autoscale
 
 
 # Production Research Agent 最终目录可以是：
+```text
 production-research-agent/
 │
 ├── src/
@@ -215,3 +220,4 @@ production-research-agent/
 ├── pyproject.toml
 ├── .env.example
 └── README.md
+```

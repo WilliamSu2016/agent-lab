@@ -10,6 +10,7 @@
 
 实现：
 
+```text
 START
 ↓
 greet
@@ -17,6 +18,7 @@ greet
 format
 ↓
 END
+```
 
 State：
 
